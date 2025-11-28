@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
+from .managers import CustomUserManager
 
 User = get_user_model()
 
@@ -28,8 +29,17 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'email': {'help_text': 'Email для входа'},
             'first_name': {'help_text': 'Имя пользователя'},
             'last_name': {'help_text': 'Фамилия пользователя'},
-            'phone_number': {'required': False, 'help_text': 'Номер телефона (опционально)'},
+            'phone_number': {'required': False, 'help_text': 'Номер телефона (опционально для обычного пользователя)'},
         }
+    
+    def validate_phone_number(self, value):
+        """Валидация номера телефона"""
+        manager = CustomUserManager()
+        try:
+            manager._validate_phone_number(value, is_superuser=False)
+        except serializers.ValidationError:
+            raise
+        return value
     
     def validate(self, data):
         """Проверка что пароли совпадают"""
