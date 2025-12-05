@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .managers import CustomUserManager
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
 
@@ -24,7 +25,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'phone_number', 'password', 'password2']
+        fields = ['email', 'first_name', 'last_name', 'phone_number', 'birthday', 'password', 'password2']
         extra_kwargs = {
             'email': {'help_text': 'Email для входа'},
             'first_name': {'help_text': 'Имя пользователя'},
@@ -154,3 +155,10 @@ class ChangePasswordSerializer(serializers.Serializer):
         if data.get('new_password') != data.get('new_password2'):
             raise serializers.ValidationError({'new_password': 'Пароли не совпадают'})
         return data
+    
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['birthday'] = user.birthday
+        return token

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Category, Product, Review
 from rest_framework.exceptions import ValidationError
+from common.validators import birthday_token
 
 class CategorySerializer(serializers.ModelSerializer):
     products_count = serializers.SerializerMethodField()
@@ -23,6 +24,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+        validators = birthday_token
 
 
 class ProductWithReviewsSerializer(serializers.ModelSerializer):
@@ -68,3 +70,4 @@ class ReviewValidateSerializer(serializers.Serializer):
             return Product.objects.get(id=product_id)
         except Product.DoesNotExist:
             raise ValidationError('Product does not exist')
+
