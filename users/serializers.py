@@ -160,5 +160,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token['birthday'] = user.birthday
+        token['birthday'] = str(user.birthday) if user.birthday else None
+
         return token
+    
+class OauthCodeSerializer(serializers.Serializer):
+    code = serializers.CharField()

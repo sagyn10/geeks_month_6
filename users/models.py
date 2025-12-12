@@ -22,6 +22,17 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         help_text='Номер телефона пользователя'
     )
     
+    REGISTRATION_CHOICES = [
+        ('local', 'Локальная'),
+        ('google', 'Google'),
+        ('facebook', 'Facebook'),
+    ]
+    registration_source = models.CharField(
+        max_length=50,
+        choices=REGISTRATION_CHOICES,
+        default='local',
+        verbose_name='Источник регистрации'
+    )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     
@@ -41,6 +52,3 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
     
-    def save(self, *args, **kwargs):
-        """Сохранение пользователя"""
-        super().save(*args, **kwargs)

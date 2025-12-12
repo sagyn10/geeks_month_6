@@ -23,7 +23,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = 'id title description price category owner'.split()
         validators = birthday_token
 
 
@@ -52,6 +52,7 @@ class ProductValidateSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True)
     price = serializers.FloatField(min_value=0.01)
     category = serializers.IntegerField(min_value=1)
+    owner = serializers.PrimaryKeyRelatedField(read_only=True)
 
     def validate_category(self, category_id):
         try:

@@ -1,0 +1,7 @@
+https://accounts.google.com/o/oauth2/v2/auth?
+client_id=343888911420-bifnulnd4c62918qt3bv4ivluqtrslh4.apps.googleusercontent.com&
+redirect_uri=http://localhost:8000/api/v1/users/google-login/&
+response_type=code&
+scope=openid%20email%20profile&
+access_type=offline&
+prompt=consent

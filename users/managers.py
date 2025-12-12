@@ -7,28 +7,18 @@ class CustomUserManager(BaseUserManager):
     """Кастомный менеджер для модели пользователя на основе email"""
     
     def _validate_phone_number(self, phone_number, is_superuser=False):
-        """
-        Валидация номера телефона.
-        
-        Для суперпользователя phone_number обязателен.
-        Для обычного пользователя - опционален.
-        
-        Формат: +7-XXX-XXX-XX-XX или +7 XXX XXX XX XX и т.д.
-        """
         if is_superuser and not phone_number:
             raise ValidationError('Номер телефона обязателен для суперпользователя')
-        
-        if phone_number:
-            # Убираем пробелы, дефисы и скобки для проверки
-            clean_phone = re.sub(r'[\s\-()]+', '', phone_number)
-            
-            # Проверяем что остались только цифры и +
-            if not re.match(r'^\+?\d{10,15}$', clean_phone):
-                raise ValidationError(
-                    'Номер телефона должен содержать от 10 до 15 цифр. '
-                    'Допустимые форматы: +7-999-999-99-99 или 89999999999'
-                )
     
+        if phone_number:
+            clean_phone = re.sub(r'[\s\-()]+', '', phone_number)
+        else:
+            clean_phone = ''
+
+            raise ValidationError(
+                'Номер телефона должен быть кыргызским: начинаться с +996 или 0 и содержать 9 цифр после.'
+            )
+
     def create_user(self, email, password=None, phone_number=None, **extra_fields):
         """
         Создает и сохраняет обычного пользователя с email и паролем
