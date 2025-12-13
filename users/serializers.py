@@ -166,3 +166,18 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     
 class OauthCodeSerializer(serializers.Serializer):
     code = serializers.CharField()
+
+
+class RegisterValidateSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_email(self, value):
+        # ensure email is unique
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('User with this email already exists')
+        return value
+
+
+class ConfirmationSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()

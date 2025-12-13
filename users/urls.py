@@ -8,6 +8,7 @@ from rest_framework_simplejwt.views import (
 )
 from users.views import CustomTokenObtainPairView
 from users.google_oauth import GoogleLoginAPIView
+from .views import RegistrationAPIView, ConfirmUserAPIView
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 
@@ -18,8 +19,12 @@ urlpatterns = [
     path('jwt/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
     path('google-login/', GoogleLoginAPIView.as_view())
+,
+    path('auth/register/', RegistrationAPIView.as_view(), name='register'),
+    path('auth/confirm/', ConfirmUserAPIView.as_view(), name='confirm'),
 ]
 
 
-    
+   
+ 
     

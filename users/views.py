@@ -13,6 +13,14 @@ from .serializers import (
     ChangePasswordSerializer,
 )
 from users.serializers import CustomTokenObtainPairSerializer
+from rest_framework.generics import CreateAPIView
+from rest_framework import status
+from django.db import transaction
+import random
+import string
+from rest_framework.authtoken.models import Token
+from .serializers import RegisterValidateSerializer, ConfirmationSerializer
+from .models import ConfirmationCode
 
 
 User = get_user_model()
@@ -131,4 +139,66 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+
+class RegistrationAPIView(CreateAPIView):
+    serializer_class = RegisterValidateSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        password = serializer.validated_data['password']
+
+        with transaction.atomic():
+            user = User.objects.create_user(
+                email=email,
+                password=password,
+                is_active=False
+            )
+
+            code = ''.join(random.choices(string.digits, k=6))
+
+            confirmation_code = ConfirmationCode.objects.create(
+                user=user,
+                code=code
+            )
+
+        return Response(
+            status=status.HTTP_201_CREATED,
+            data={
+                'user_id': user.id,
+                'confirmation_code': code
+            }
+        )
+
+
+class ConfirmUserAPIView(CreateAPIView):
+    serializer_class = ConfirmationSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = ConfirmationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user_id = serializer.validated_data['user_id']
+
+        with transaction.atomic():
+            user = User.objects.get(id=user_id)
+            user.is_active = True
+            user.save()
+
+            token, _ = Token.objects.get_or_create(user=user)
+
+            ConfirmationCode.objects.filter(user=user).delete()
+
+        return Response(
+            status=status.HTTP_200_OK,
+            data={
+                'message': 'User аккаунт успешно активирован',
+                'key': token.key
+            }
+        )
 
