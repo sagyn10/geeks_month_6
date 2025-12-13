@@ -181,3 +181,4 @@ class RegisterValidateSerializer(serializers.Serializer):
 
 class ConfirmationSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
+    confirmation_code = serializers.CharField(max_length=10)

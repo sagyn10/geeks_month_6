@@ -20,7 +20,7 @@ import random
 import string
 from rest_framework.authtoken.models import Token
 from .serializers import RegisterValidateSerializer, ConfirmationSerializer
-from .models import ConfirmationCode
+from .utils import set_confirmation_code, pop_confirmation_code
 
 
 User = get_user_model()
@@ -161,10 +161,8 @@ class RegistrationAPIView(CreateAPIView):
 
             code = ''.join(random.choices(string.digits, k=6))
 
-            confirmation_code = ConfirmationCode.objects.create(
-                user=user,
-                code=code
-            )
+            # Store code in Redis with TTL 5 minutes
+            set_confirmation_code(user.id, code, ttl=300)
 
         return Response(
             status=status.HTTP_201_CREATED,
@@ -185,14 +183,22 @@ class ConfirmUserAPIView(CreateAPIView):
 
         user_id = serializer.validated_data['user_id']
 
+        confirmation_code = serializer.validated_data.get('confirmation_code')
+
+        # atomically pop code from redis
+        stored = pop_confirmation_code(user_id)
+        if not stored:
+            return Response({'error': 'Confirmation code expired or not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if str(stored) != str(confirmation_code):
+            return Response({'error': 'Invalid confirmation code'}, status=status.HTTP_400_BAD_REQUEST)
+
         with transaction.atomic():
             user = User.objects.get(id=user_id)
             user.is_active = True
             user.save()
 
             token, _ = Token.objects.get_or_create(user=user)
-
-            ConfirmationCode.objects.filter(user=user).delete()
 
         return Response(
             status=status.HTTP_200_OK,

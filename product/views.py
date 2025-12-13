@@ -6,7 +6,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
-
+from django.core.cache import cache
 from .models import Category, Product, Review
 from .serializers import (
     CategorySerializer,
@@ -95,6 +95,19 @@ class ProductListCreateAPIView(ListCreateAPIView):
         return Response(data=ProductSerializer(product).data,
                         status=status.HTTP_201_CREATED)
 
+    def get(self, request, *args, **kwargs):
+        cached_data = cache.get("product_list")
+        if cached_data:
+            print("Redis")
+            return Response(data=cached_data, status=status.HTTP_200_OK)
+        
+        response = super().get(self, request, *args, **kwargs)
+        print("Postgres")
+        if response.data.get("total", 0) > 0:
+            cache.set("product_list", response.data, timeout=300)
+
+
+        return response
 
 class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.select_related('category').all()

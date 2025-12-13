@@ -53,18 +53,3 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.email
     
 
-class ConfirmationCode(models.Model):
-    """Код подтверждения для активации пользователя"""
-    user = models.ForeignKey(
-        'users.CustomUser', on_delete=models.CASCADE, related_name='confirmation_codes'
-    )
-    code = models.CharField(max_length=10)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name = 'Код подтверждения'
-        verbose_name_plural = 'Коды подтверждения'
-
-    def __str__(self) -> str:
-        return f"ConfirmationCode(user_id={self.user_id}, code={self.code})"
-

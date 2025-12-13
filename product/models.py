@@ -16,7 +16,7 @@ class Category(models.Model):
 class Product(BaseModel):
     title = models.CharField(max_length=50)
     description = models.TextField(null=True, blank=True)
-    price = models.DecimalField(max_digits=5, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
