@@ -21,7 +21,7 @@ import string
 from rest_framework.authtoken.models import Token
 from .serializers import RegisterValidateSerializer, ConfirmationSerializer
 from .utils import set_confirmation_code, pop_confirmation_code
-
+from users.tasks import send_otp_mail
 
 User = get_user_model()
 
@@ -163,7 +163,9 @@ class RegistrationAPIView(CreateAPIView):
 
             # Store code in Redis with TTL 5 minutes
             set_confirmation_code(user.id, code, ttl=300)
-
+            
+            send_otp_mail.delay(email, code)
+        
         return Response(
             status=status.HTTP_201_CREATED,
             data={

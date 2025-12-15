@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,6 +44,9 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'users',
     'product',
+    'django_celery_beat',
+    
+    
 ]
 
 MIDDLEWARE = [
@@ -158,7 +162,7 @@ CACHES = {
 
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379",
+        "LOCATION": "redis://127.0.0.1:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient"
         }
@@ -168,3 +172,46 @@ CACHES = {
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 REDIS_DB = 0
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/2"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/2"
+CELERY_BEAT_SCHEDULE = {
+    # Задача #1: Очистка старых файлов (каждый день в 3:00)
+    'cleanup-old-temp-files': {
+        'task': 'users.tasks.cleanup_old_temp_files',
+        'schedule': crontab(hour=3, minute=0),
+    },
+    
+    # Задача #2: Деактивация неактивных пользователей (каждый день в 2:00)
+    'deactivate-inactive-users': {
+        'task': 'users.tasks.deactivate_inactive_users_task',
+        'schedule': crontab(hour=2, minute=0),
+    },
+    
+    # Задача #3: Ежедневный отчет (каждый день в 9:00)
+    'send-daily-report': {
+        'task': 'users.tasks.send_daily_report',
+        'schedule': crontab(hour=9, minute=0),
+    },
+    
+    # Для ТЕСТА:  каждую минуту (потом удали)
+    'test-cleanup-every-minute': {
+        'task': 'users.tasks.cleanup_old_temp_files',
+        'schedule': crontab(minute='*/1'),  # Каждую минуту
+    },
+}
+
+
+# Email настройки
+EMAIL_BACKEND = 'django.core.mail.backends. console.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # или твой SMTP сервер
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'sagynbaevaman7.09@gmail.com'
+DEFAULT_FROM_EMAIL = 'sagynbaevaman7.09@gmail.com'
+EMAIL_HOST_PASSWORD = 'aman.10.03.2008'
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+ADMIN_EMAIL = 'admin@example.com'  # ← для получения статистики
+
+
